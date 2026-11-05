@@ -1,0 +1,20 @@
+enum AnnouncementAudience {
+  ALL_MEMBERS
+  EVENT_REGISTRANTS
+}
+
+model Announcement {
+  id        String               @id @default(uuid())
+  clubId    String
+  club      Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User                 @relation("AuthoredAnnouncements", fields: [authorId], references: [id])
+  title     String
+  body      String
+  audience  AnnouncementAudience
+  eventId   String?
+  event     Event?               @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  createdAt DateTime             @default(now())
+
+  @@index([clubId, createdAt])
+}

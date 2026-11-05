@@ -1,0 +1,58 @@
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum EventVisibility {
+  CAMPUS
+  MEMBERS_ONLY
+}
+
+enum AttendanceStatus {
+  REGISTERED
+  PRESENT
+  ABSENT
+  CANCELLED
+}
+
+model Event {
+  id            String              @id @default(uuid())
+  clubId        String
+  club          Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdById   String
+  createdBy     User                @relation("EventCreator", fields: [createdById], references: [id])
+  title         String
+  description   String
+  location      String
+  startsAt      DateTime
+  endsAt        DateTime
+  capacity      Int?
+  visibility    EventVisibility     @default(CAMPUS)
+  status        EventStatus         @default(DRAFT)
+  registrations EventRegistration[]
+  announcements Announcement[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([clubId, startsAt])
+  @@index([status, startsAt])
+}
+
+model EventRegistration {
+  id              String           @id @default(uuid())
+  eventId         String
+  event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          AttendanceStatus @default(REGISTERED)
+  statusChangedAt DateTime         @default(now())
+  checkedInAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@index([eventId, status])
+}

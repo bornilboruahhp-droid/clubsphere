@@ -1,0 +1,27 @@
+enum PlatformRole {
+  STUDENT
+  ADVISOR
+  ADMIN
+}
+
+model User {
+  id         String       @id
+  email      String       @unique
+  name       String
+  studentId  String?      @unique
+  department    String?
+  role              PlatformRole          @default(STUDENT)
+  notifications     Notification[]
+  proposedClubs     Club[]                @relation("ClubProposer")
+  advisedClubs      Club[]                @relation("ClubAdvisor")
+  reviewedApprovals ClubApproval[]        @relation("ApprovalReviewer")
+  memberships       Membership[]
+  objectiveUpdates  ClubObjectiveUpdate[]
+  createdEvents     Event[]               @relation("EventCreator")
+  eventRegistrations EventRegistration[]
+  authoredAnnouncements Announcement[]    @relation("AuthoredAnnouncements")
+  createdAt         DateTime              @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([role])
+}

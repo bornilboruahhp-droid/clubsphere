@@ -1,0 +1,118 @@
+enum ClubStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum ApprovalStage {
+  ADVISOR
+  ADMIN
+}
+
+enum ApprovalDecision {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ClubRole {
+  PRESIDENT
+  TREASURER
+  SECRETARY
+  MEMBER
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  REMOVED
+}
+
+enum ObjectiveStatus {
+  PLANNED
+  IN_PROGRESS
+  ACHIEVED
+  DROPPED
+}
+
+model Club {
+  id          String         @id @default(uuid())
+  name        String
+  description String
+  status      ClubStatus     @default(PENDING)
+  proposerId  String
+  advisorId   String
+  proposer    User           @relation("ClubProposer", fields: [proposerId], references: [id])
+  advisor     User           @relation("ClubAdvisor", fields: [advisorId], references: [id])
+  approvals   ClubApproval[]
+  memberships Membership[]
+  objectives  ClubObjective[]
+  events      Event[]
+  announcements Announcement[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([status])
+  @@index([advisorId])
+}
+
+model ClubApproval {
+  id         String           @id @default(uuid())
+  clubId     String
+  club       Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  stage      ApprovalStage
+  decision   ApprovalDecision @default(PENDING)
+  reviewerId String?
+  reviewer   User?            @relation("ApprovalReviewer", fields: [reviewerId], references: [id])
+  comment    String?
+  decidedAt  DateTime?
+  createdAt  DateTime         @default(now())
+
+  @@unique([clubId, stage])
+}
+
+model Membership {
+  id        String           @id @default(uuid())
+  clubId    String
+  club      Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      ClubRole         @default(MEMBER)
+  status    MembershipStatus @default(PENDING)
+  joinedAt  DateTime?
+  removedAt DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([clubId, userId])
+  @@index([clubId, status])
+  @@index([userId])
+}
+
+model ClubObjective {
+  id          String                @id @default(uuid())
+  clubId      String
+  club        Club                  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      ObjectiveStatus       @default(PLANNED)
+  targetDate  DateTime?
+  updates     ClubObjectiveUpdate[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([clubId])
+}
+
+model ClubObjectiveUpdate {
+  id          String        @id @default(uuid())
+  objectiveId String
+  objective   ClubObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id])
+  note        String
+  createdAt   DateTime      @default(now())
+
+  @@index([objectiveId, createdAt])
+}
